@@ -38,3 +38,4 @@ The implementation and automated audit intentionally did not launch a Flutter ru
 - Confirm whether repeated POST `/api/Users/Cart/{bookId}` increments quantity and whether DELETE removes one unit or the entire line before enabling quantity controls.
 - Confirm checkout provider URL, callback/return scheme, payment verification, cart clearing, and order-creation ownership.
 - Confirm Azure Blob DNS/storage restoration and correct seed title/author pairings.
+
