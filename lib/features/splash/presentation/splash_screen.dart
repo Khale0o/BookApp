@@ -65,7 +65,6 @@ class _SplashScreenState extends State<SplashScreen>
                       ? const AlwaysStoppedAnimation(1)
                       : animation,
                   axis: Axis.horizontal,
-                  axisAlignment: 0,
                   child: Container(width: 72, height: 1, color: AppColors.gold),
                 ),
                 const SizedBox(height: AppSpacing.sm),
