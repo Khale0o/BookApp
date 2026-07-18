@@ -112,3 +112,8 @@ The app handles these cases without inventing missing data.
 Cormorant Garamond and Manrope are included under the SIL Open Font License.
 
 Fallback book-cover sources are documented in [docs/assets/book_cover_sources.md](docs/assets/book_cover_sources.md).
+## License
+
+The source code is available under the [MIT License](LICENSE).
+
+Book covers, fonts, and third-party assets remain subject to their original licenses and documented attributions.

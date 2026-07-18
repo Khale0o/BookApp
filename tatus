@@ -1,0 +1,62 @@
+[35mREADME.md[m[36m:[m[32m15[m[36m:[m- Login, signup, [1;31mpassword[m recovery, and session restoration
+[35mdocs/api_contract_notes.md[m[36m:[m[32m8[m[36m:[m- Authentication: signup, login, forgot [1;31mpassword[m, and reset [1;31mpassword[m input DTOs. Success response bodies are not described.
+[35mdocs/api_contract_notes.md[m[36m:[m[32m25[m[36m:[mThe OpenAPI document declares a global [1;31mbearer[m security requirement and does not override it on signup/login/reset routes. Requiring a [1;31mbearer[m token to acquire a [1;31mbearer[m token is internally inconsistent and likely a generated-document omission. The client excludes authentication acquisition routes from token attachment and attaches a restored [1;31mbearer[m token centrally elsewhere. Tokens, credentials, [1;31mauthorization[m headers, and response bodies are never logged.
+[35mdocs/architecture.md[m[36m:[m[32m12[m[36m:[m        → centralized Dio client + [1;31mbearer[m interceptor
+[35mdocs/architecture.md[m[36m:[m[32m29[m[36m:[m- `/auth/login`, `/auth/signup`, `/auth/forgot-[1;31mpassword[m`, `/auth/reset-[1;31mpassword[m`
+[35mdocs/architecture.md[m[36m:[m[32m39[m[36m:[m- Auth: `AuthController` restores and clears the platform-secured [1;31mbearer[m session.
+[35mdocs/manual_qa.md[m[36m:[m[32m37[m[36m:[m- Record the actual successful login token shape and user/cart/address/order response bodies without logging credentials or [1;31mauthorization[m headers.
+[35mdocs/openapi.json[m[36m:[m[32m1031[m[36m:[m          "[1;31mpassword[m": {
+[35mdocs/openapi.json[m[36m:[m[32m1045[m[36m:[m          "[1;31mpassword[m": {
+[35mdocs/openapi.json[m[36m:[m[32m1049[m[36m:[m          "[1;31mpassword[mConfirm": {
+[35mdocs/openapi.json[m[36m:[m[32m1075[m[36m:[m          "[1;31mpassword[m": {
+[35mdocs/openapi.json[m[36m:[m[32m1079[m[36m:[m          "[1;31mpassword[mConfirm": {
+[35mdocs/openapi.json[m[36m:[m[32m1096[m[36m:[m        "[1;31mbearer[mFormat": "JWT"
+[35mdocs/portfolio_case_study.md[m[36m:[m[32m20[m[36m:[mRiverpod controllers own persistent catalog, auth, cart, and account state. Repositories isolate every API operation and undocumented response tolerance. go_router owns deep links, typed initial Details data, indexed branches, and full-screen commerce/account routes. A centralized Dio interceptor handles the restored [1;31mbearer[m token and protected 401s.
+[35mdocs/portfolio_case_study.md[m[36m:[m[32m36[m[36m:[mAutomated tests cover parsers, repositories, pagination integrity, deterministic visuals, route data, session storage behavior, [1;31mbearer[m interception, cart totals, strict checkout destinations, narrow layouts, typography, contrast roles, and reduced motion. Static analysis and the complete test suite pass without launching a runtime.
+[35mdocs/testing.md[m[36m:[m[32m21[m[36m:[m- auth token response tolerance, session restoration/logout, [1;31mbearer[m attachment, public auth exclusion, and 401 clearing;
+[35mlib/app/router/app_router.dart[m[36m:[m[32m24[m[36m:[m  static const forgotPassword = '/auth/forgot-[1;31mpassword[m';
+[35mlib/app/router/app_router.dart[m[36m:[m[32m25[m[36m:[m  static const resetPassword = '/auth/reset-[1;31mpassword[m';
+[35mlib/core/auth/token_store.dart[m[36m:[m[32m13[m[36m:[m  static const _key = 'leaf_and_loom_[1;31mbearer[m_token';
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m5[m[36m:[m  Future<String> login({required String email, required String [1;31mpassword[m});
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m9[m[36m:[m    required String [1;31mpassword[m,
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m10[m[36m:[m    required String [1;31mpassword[mConfirm,
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m25[m[36m:[m    required String [1;31mpassword[m,
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m29[m[36m:[m      data: {'email': email.trim(), '[1;31mpassword[m': [1;31mpassword[m},
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m56[m[36m:[m    required String [1;31mpassword[m,
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m57[m[36m:[m    required String [1;31mpassword[mConfirm,
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m63[m[36m:[m        '[1;31mpassword[m': [1;31mpassword[m,
+[35mlib/features/auth/data/auth_repository.dart[m[36m:[m[32m64[m[36m:[m        '[1;31mpassword[mConfirm': [1;31mpassword[mConfirm,
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m40[m[36m:[m  Future<bool> login({required String email, required String [1;31mpassword[m}) async {
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m43[m[36m:[m      await _repository.login(email: email, [1;31mpassword[m: [1;31mpassword[m);
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m95[m[36m:[m    required String [1;31mpassword[m,
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m96[m[36m:[m    required String [1;31mpassword[mConfirm,
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m102[m[36m:[m        [1;31mpassword[m: [1;31mpassword[m,
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m103[m[36m:[m        [1;31mpassword[mConfirm: [1;31mpassword[mConfirm,
+[35mlib/features/auth/presentation/auth_controller.dart[m[36m:[m[32m108[m[36m:[m        message: 'Password updated. Sign in with the new [1;31mpassword[m.',
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m84[m[36m:[m  final _[1;31mpassword[m = TextEditingController();
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m90[m[36m:[m    _[1;31mpassword[m.dispose();
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m98[m[36m:[m        .login(email: _email.text, [1;31mpassword[m: _[1;31mpassword[m.text);
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m115[m[36m:[m              controller: _[1;31mpassword[m,
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m117[m[36m:[m              autofillHints: const [AutofillHints.[1;31mpassword[m],
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m124[m[36m:[m                  tooltip: _obscure ? 'Show [1;31mpassword[m' : 'Hide [1;31mpassword[m',
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m153[m[36m:[m              child: const Text('Forgot [1;31mpassword[m?'),
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m192[m[36m:[m      '[1;31mpassword[m': _controllers[1].text,
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m193[m[36m:[m      '[1;31mpassword[mConfirm': _controllers[2].text,
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m221[m[36m:[m                  tooltip: _obscure ? 'Show [1;31mpassword[ms' : 'Hide [1;31mpassword[ms',
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m238[m[36m:[m              decoration: const InputDecoration(labelText: 'Confirm [1;31mpassword[m'),
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m311[m[36m:[m  final _[1;31mpassword[m = TextEditingController();
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m318[m[36m:[m    _[1;31mpassword[m.dispose();
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m328[m[36m:[m            [1;31mpassword[m: _[1;31mpassword[m.text,
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m329[m[36m:[m            [1;31mpassword[mConfirm: _confirm.text,
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m340[m[36m:[m      title: widget.reset ? 'Reset [1;31mpassword[m' : 'Recover access',
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m342[m[36m:[m          ? 'Enter the reset token supplied by the backend and choose a new [1;31mpassword[m.'
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m360[m[36m:[m                controller: _[1;31mpassword[m,
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m363[m[36m:[m                decoration: const InputDecoration(labelText: 'New [1;31mpassword[m'),
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m369[m[36m:[m                validator: (value) => value != _[1;31mpassword[m.text
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m373[m[36m:[m                  labelText: 'Confirm new [1;31mpassword[m',
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m383[m[36m:[m                child: Text(widget.reset ? 'Update [1;31mpassword[m' : 'Request reset'),
+[35mlib/features/auth/presentation/auth_screens.dart[m[36m:[m[32m505[m[36m:[m  if (value == null || value.isEmpty) return 'Enter a [1;31mpassword[m.';
+[35mtest/auth_test.dart[m[36m:[m[32m17[m[36m:[m    required String [1;31mpassword[m,
+[35mtest/auth_test.dart[m[36m:[m[32m28[m[36m:[m    required String [1;31mpassword[m,
+[35mtest/auth_test.dart[m[36m:[m[32m29[m[36m:[m    required String [1;31mpassword[mConfirm,
+[35mtest/network_auth_test.dart[m[36m:[m[32m34[m[36m:[m  test('[1;31mbearer[m interceptor protects account paths but not login', () async {
