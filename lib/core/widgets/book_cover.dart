@@ -1,5 +1,6 @@
 import 'package:bookapp/app/theme/app_tokens.dart';
 import 'package:bookapp/core/utils/image_url_resolver.dart';
+import 'package:bookapp/core/utils/book_cover_assets.dart';
 import 'package:bookapp/core/widgets/generated_editorial_cover.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -144,10 +145,20 @@ class _CoverFallback extends StatelessWidget {
   final String? category;
 
   @override
-  Widget build(BuildContext context) => GeneratedEditorialCover(
-    bookId: bookId,
-    title: title,
-    author: author,
-    category: category,
-  );
+  Widget build(BuildContext context) {
+    final asset = curatedBookCoverAsset(title);
+    final generated = GeneratedEditorialCover(
+      bookId: bookId,
+      title: title,
+      author: author,
+      category: category,
+    );
+    if (asset == null) return generated;
+    return Image.asset(
+      asset,
+      fit: BoxFit.cover,
+      filterQuality: FilterQuality.medium,
+      errorBuilder: (context, error, stackTrace) => generated,
+    );
+  }
 }

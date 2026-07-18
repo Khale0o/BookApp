@@ -1,10 +1,13 @@
 import 'package:bookapp/features/books/presentation/book_details_screen.dart';
 import 'package:bookapp/app/theme/app_tokens.dart';
 import 'package:bookapp/app/shell/app_shell.dart';
+import 'package:bookapp/features/auth/presentation/auth_screens.dart';
 import 'package:bookapp/features/cart/presentation/cart_screen.dart';
+import 'package:bookapp/features/checkout/presentation/checkout_screen.dart';
 import 'package:bookapp/features/books/domain/book.dart';
 import 'package:bookapp/features/explore/presentation/explore_screen.dart';
 import 'package:bookapp/features/home/presentation/home_screen.dart';
+import 'package:bookapp/features/orders/presentation/orders_screen.dart';
 import 'package:bookapp/features/profile/presentation/profile_screen.dart';
 import 'package:bookapp/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +19,12 @@ abstract final class AppRoutes {
   static const explore = '/explore';
   static const cart = '/cart';
   static const profile = '/profile';
+  static const login = '/auth/login';
+  static const signUp = '/auth/signup';
+  static const forgotPassword = '/auth/forgot-password';
+  static const resetPassword = '/auth/reset-password';
+  static const checkout = '/checkout';
+  static const orders = '/orders';
   static const bookName = 'book-details';
   static String book(int id) => '/books/$id';
 }
@@ -38,6 +47,36 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.login,
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.signUp,
+      builder: (context, state) => const SignUpScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.forgotPassword,
+      builder: (context, state) => const PasswordRecoveryScreen(reset: false),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.resetPassword,
+      builder: (context, state) => const PasswordRecoveryScreen(reset: true),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.checkout,
+      builder: (context, state) => const CheckoutScreen(),
+    ),
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: AppRoutes.orders,
+      builder: (context, state) => const OrdersScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

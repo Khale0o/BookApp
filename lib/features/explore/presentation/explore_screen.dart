@@ -369,6 +369,7 @@ class _CatalogGrid extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final width = constraints.maxWidth;
+      final textScale = MediaQuery.textScalerOf(context).scale(1);
       final columns = width < 330
           ? 1
           : width < 650
@@ -384,7 +385,9 @@ class _CatalogGrid extends StatelessWidget {
           crossAxisCount: columns,
           mainAxisSpacing: AppSpacing.lg,
           crossAxisSpacing: AppSpacing.md,
-          childAspectRatio: columns == 1 ? 1.75 : .55,
+          childAspectRatio:
+              (columns == 1 ? 1.75 : .55) /
+              (1 + (textScale - 1).clamp(0, 1) * .18),
         ),
         itemBuilder: (context, index) => _CatalogCard(book: books[index]),
       );

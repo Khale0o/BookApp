@@ -2,7 +2,6 @@ import 'package:bookapp/core/errors/app_exception.dart';
 import 'package:bookapp/core/network/api_client.dart';
 import 'package:bookapp/features/books/domain/book.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 abstract interface class BooksRepository {
   Future<List<Book>> getBooks({
@@ -48,7 +47,6 @@ class ApiBooksRepository implements BooksRepository {
       cancelToken: cancelToken,
     );
     final books = parseBookList(response.data);
-    _debugLogBookImages(books);
     return books;
   }
 
@@ -60,17 +58,7 @@ class ApiBooksRepository implements BooksRepository {
       cancelToken: cancelToken,
     );
     final book = selectSingleBook(response.data, id);
-    _debugLogBookImages([book]);
     return book;
-  }
-}
-
-void _debugLogBookImages(List<Book> books) {
-  if (!kDebugMode) return;
-  for (final book in books) {
-    debugPrint(
-      '[Books API] id=${book.id ?? 'unknown'} bookImage=${book.bookImage ?? '<null>'}',
-    );
   }
 }
 

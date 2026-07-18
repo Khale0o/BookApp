@@ -1,11 +1,15 @@
 import 'package:bookapp/core/config/app_config.dart';
+import 'package:bookapp/core/auth/token_store.dart';
 import 'package:bookapp/core/network/api_client.dart';
 import 'package:bookapp/features/books/data/books_repository.dart';
 import 'package:bookapp/features/books/domain/book.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
+final apiClientProvider = Provider<ApiClient>(
+  (ref) => ApiClient(tokenStore: ref.watch(tokenStoreProvider)),
+);
 final booksRepositoryProvider = Provider<BooksRepository>(
   (ref) => ApiBooksRepository(ref.watch(apiClientProvider)),
 );

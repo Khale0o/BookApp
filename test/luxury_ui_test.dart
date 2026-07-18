@@ -11,6 +11,9 @@ import 'package:bookapp/features/books/domain/book.dart';
 import 'package:bookapp/features/books/presentation/book_details_screen.dart';
 import 'package:bookapp/features/books/presentation/books_providers.dart';
 import 'package:bookapp/features/home/presentation/home_screen.dart';
+import 'package:bookapp/features/reviews/data/reviews_repository.dart';
+import 'package:bookapp/features/reviews/domain/book_review.dart';
+import 'package:bookapp/features/reviews/presentation/reviews_providers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -77,6 +80,15 @@ class _PendingDetailsRepository implements BooksRepository {
     String? sortOrder,
     CancelToken? cancelToken,
   }) async => _books;
+}
+
+class _FakeReviewsRepository implements ReviewsRepository {
+  @override
+  Future<List<BookReview>> getReviews(
+    int bookId, {
+    int pageNumber = 1,
+    int pageSize = 6,
+  }) async => const [];
 }
 
 Widget _testApp(Widget child, {bool reducedMotion = false}) => MaterialApp(
@@ -197,6 +209,7 @@ void main() {
       ProviderScope(
         overrides: [
           booksRepositoryProvider.overrideWithValue(_LuxuryFakeRepository()),
+          reviewsRepositoryProvider.overrideWithValue(_FakeReviewsRepository()),
         ],
         child: _testApp(const HomeScreen()),
       ),
@@ -228,6 +241,7 @@ void main() {
       ProviderScope(
         overrides: [
           booksRepositoryProvider.overrideWithValue(_LuxuryFakeRepository()),
+          reviewsRepositoryProvider.overrideWithValue(_FakeReviewsRepository()),
         ],
         child: _testApp(const BookDetailsScreen(bookId: 2)),
       ),
@@ -256,6 +270,9 @@ void main() {
             booksRepositoryProvider.overrideWithValue(
               _PendingDetailsRepository(),
             ),
+            reviewsRepositoryProvider.overrideWithValue(
+              _FakeReviewsRepository(),
+            ),
           ],
           child: _testApp(
             BookDetailsScreen(
@@ -282,6 +299,7 @@ void main() {
           booksRepositoryProvider.overrideWithValue(
             _PendingDetailsRepository(),
           ),
+          reviewsRepositoryProvider.overrideWithValue(_FakeReviewsRepository()),
         ],
         child: _testApp(
           BookDetailsScreen(bookId: 2, initialBook: _books.first),
@@ -305,6 +323,7 @@ void main() {
       ProviderScope(
         overrides: [
           booksRepositoryProvider.overrideWithValue(_LuxuryFakeRepository()),
+          reviewsRepositoryProvider.overrideWithValue(_FakeReviewsRepository()),
         ],
         child: _testApp(const HomeScreen()),
       ),
@@ -323,6 +342,7 @@ void main() {
       ProviderScope(
         overrides: [
           booksRepositoryProvider.overrideWithValue(_LuxuryFakeRepository()),
+          reviewsRepositoryProvider.overrideWithValue(_FakeReviewsRepository()),
         ],
         child: _testApp(const BookDetailsScreen(bookId: 1)),
       ),
