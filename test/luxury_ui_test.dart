@@ -54,6 +54,9 @@ class _LuxuryFakeRepository implements BooksRepository {
   Future<List<Book>> getBooks({
     int pageNumber = 1,
     int pageSize = 12,
+    String? categoryName,
+    String? searchValue,
+    String? sortOrder,
     CancelToken? cancelToken,
   }) async => _books;
 }
@@ -69,6 +72,9 @@ class _PendingDetailsRepository implements BooksRepository {
   Future<List<Book>> getBooks({
     int pageNumber = 1,
     int pageSize = 12,
+    String? categoryName,
+    String? searchValue,
+    String? sortOrder,
     CancelToken? cancelToken,
   }) async => _books;
 }

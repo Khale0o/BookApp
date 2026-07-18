@@ -8,6 +8,7 @@ import 'package:bookapp/core/widgets/book_cover.dart';
 import 'package:bookapp/core/widgets/content_shell.dart';
 import 'package:bookapp/features/books/domain/book.dart';
 import 'package:bookapp/features/books/presentation/books_providers.dart';
+import 'package:bookapp/features/explore/presentation/catalog_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,11 +98,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             animation: _entrance,
                             interval: const Interval(.32, 1),
                             child: _CuratedShelf(
+                              title: 'Curated for you',
+                              subtitle:
+                                  'A measured selection from the current collection.',
                               books: items
                                   .skip(1)
                                   .take(8)
                                   .toList(growable: false),
+                              onSeeAll: () => context.go(AppRoutes.explore),
                             ),
+                          ),
+                          _CuratedShelf(
+                            title:
+                                items.any(
+                                  (book) => book.publicationYear != null,
+                                )
+                                ? 'New on the shelf'
+                                : 'More to explore',
+                            subtitle:
+                                items.any(
+                                  (book) => book.publicationYear != null,
+                                )
+                                ? 'Recent publication years from the current catalog.'
+                                : 'Continue through the collection.',
+                            books:
+                                (items.any(
+                                          (book) =>
+                                              book.publicationYear != null,
+                                        )
+                                        ? ([...items]..sort(
+                                            (a, b) => (b.publicationYear ?? -1)
+                                                .compareTo(
+                                                  a.publicationYear ?? -1,
+                                                ),
+                                          ))
+                                        : items.reversed.toList())
+                                    .take(8)
+                                    .toList(growable: false),
+                            onSeeAll: () => context.go(AppRoutes.explore),
+                          ),
+                          _CategorySection(
+                            books: items,
+                            onSelected: (category) {
+                              ref
+                                  .read(catalogControllerProvider.notifier)
+                                  .setCategory(category);
+                              context.go(AppRoutes.explore);
+                            },
                           ),
                           const SizedBox(height: AppSpacing.huge),
                         ],
@@ -617,8 +660,16 @@ class _StockLabel extends StatelessWidget {
 }
 
 class _CuratedShelf extends StatefulWidget {
-  const _CuratedShelf({required this.books});
+  const _CuratedShelf({
+    required this.title,
+    required this.subtitle,
+    required this.books,
+    required this.onSeeAll,
+  });
+  final String title;
+  final String subtitle;
   final List<Book> books;
+  final VoidCallback onSeeAll;
 
   @override
   State<_CuratedShelf> createState() => _CuratedShelfState();
@@ -648,7 +699,11 @@ class _CuratedShelfState extends State<_CuratedShelf>
     if (widget.books.isEmpty) return const SizedBox.shrink();
     final reduced = MediaQuery.disableAnimationsOf(context);
     return ColoredBox(
-      key: const ValueKey('shelf-surface'),
+      key: ValueKey(
+        widget.title == 'Curated for you'
+            ? 'shelf-surface'
+            : 'shelf-surface-${widget.title}',
+      ),
       color: Theme.of(context).colorScheme.surface,
       child: ContentShell(
         child: Padding(
@@ -664,12 +719,12 @@ class _CuratedShelfState extends State<_CuratedShelf>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'The curated shelf',
+                          widget.title,
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          'A measured selection from the current collection.',
+                          widget.subtitle,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: Theme.of(
@@ -680,17 +735,19 @@ class _CuratedShelfState extends State<_CuratedShelf>
                       ],
                     ),
                   ),
-                  Text(
-                    'SWIPE TO BROWSE',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  TextButton(
+                    onPressed: widget.onSeeAll,
+                    child: const Text('See all'),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
               SizedBox(
-                key: const ValueKey('curated-shelf'),
+                key: ValueKey(
+                  widget.title == 'Curated for you'
+                      ? 'curated-shelf'
+                      : 'shelf-${widget.title}',
+                ),
                 height: 390,
                 child: ListView.separated(
                   clipBehavior: Clip.hardEdge,
@@ -715,6 +772,64 @@ class _CuratedShelfState extends State<_CuratedShelf>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategorySection extends StatelessWidget {
+  const _CategorySection({required this.books, required this.onSelected});
+
+  final List<Book> books;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final unique = <String, String>{};
+    for (final book in books) {
+      final category = book.categoryName?.trim();
+      if (category == null || category.isEmpty) continue;
+      unique.putIfAbsent(category.toLowerCase(), () => category);
+    }
+    final categories = unique.values.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    if (categories.isEmpty) return const SizedBox.shrink();
+    return ContentShell(
+      child: Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.xxl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Browse by category',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Explore categories represented in the loaded collection.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                for (final category in categories)
+                  Semantics(
+                    button: true,
+                    label: 'Explore $category books',
+                    child: OutlinedButton.icon(
+                      onPressed: () => onSelected(category),
+                      icon: const Icon(Icons.menu_book_outlined, size: 17),
+                      label: Text(category),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );

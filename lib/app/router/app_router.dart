@@ -1,7 +1,11 @@
 import 'package:bookapp/features/books/presentation/book_details_screen.dart';
 import 'package:bookapp/app/theme/app_tokens.dart';
+import 'package:bookapp/app/shell/app_shell.dart';
+import 'package:bookapp/features/cart/presentation/cart_screen.dart';
 import 'package:bookapp/features/books/domain/book.dart';
+import 'package:bookapp/features/explore/presentation/explore_screen.dart';
 import 'package:bookapp/features/home/presentation/home_screen.dart';
+import 'package:bookapp/features/profile/presentation/profile_screen.dart';
 import 'package:bookapp/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +13,9 @@ import 'package:go_router/go_router.dart';
 abstract final class AppRoutes {
   static const splash = '/';
   static const home = '/home';
+  static const explore = '/explore';
+  static const cart = '/cart';
+  static const profile = '/profile';
   static const bookName = 'book-details';
   static String book(int id) => '/books/$id';
 }
@@ -22,18 +29,56 @@ class BookDetailsRouteExtra {
   bool matches(int? bookId) => bookId != null && book.id == bookId;
 }
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouter = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: AppRoutes.splash,
   routes: [
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
     ),
-    GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          AppShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (context, state) => const HomeScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.explore,
+              builder: (context, state) => const ExploreScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.cart,
+              builder: (context, state) => const CartScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.profile,
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
     GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
       path: '/books/:bookId',
       name: AppRoutes.bookName,
       pageBuilder: (context, state) {

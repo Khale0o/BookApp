@@ -8,6 +8,9 @@ abstract interface class BooksRepository {
   Future<List<Book>> getBooks({
     int pageNumber = 1,
     int pageSize = 12,
+    String? categoryName,
+    String? searchValue,
+    String? sortOrder,
     CancelToken? cancelToken,
   });
   Future<Book> getBook(int id, {CancelToken? cancelToken});
@@ -21,11 +24,27 @@ class ApiBooksRepository implements BooksRepository {
   Future<List<Book>> getBooks({
     int pageNumber = 1,
     int pageSize = 12,
+    String? categoryName,
+    String? searchValue,
+    String? sortOrder,
     CancelToken? cancelToken,
   }) async {
+    final query = <String, Object>{
+      'pageNumber': pageNumber,
+      'pageSize': pageSize,
+    };
+    if (categoryName?.trim().isNotEmpty ?? false) {
+      query['categoryName'] = categoryName!.trim();
+    }
+    if (searchValue?.trim().isNotEmpty ?? false) {
+      query['searchValue'] = searchValue!.trim();
+    }
+    if (sortOrder?.trim().isNotEmpty ?? false) {
+      query['sortOrder'] = sortOrder!.trim();
+    }
     final response = await _client.dio.get<Object?>(
       '/api/Books',
-      queryParameters: {'pageNumber': pageNumber, 'pageSize': pageSize},
+      queryParameters: query,
       cancelToken: cancelToken,
     );
     final books = parseBookList(response.data);

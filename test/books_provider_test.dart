@@ -14,6 +14,9 @@ class _FakeBooksRepository implements BooksRepository {
   Future<List<Book>> getBooks({
     int pageNumber = 1,
     int pageSize = 12,
+    String? categoryName,
+    String? searchValue,
+    String? sortOrder,
     CancelToken? cancelToken,
   }) async => const [Book(id: 4, bookTitle: 'Provider book', bookPrice: 12)];
 }
