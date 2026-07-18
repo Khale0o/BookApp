@@ -18,6 +18,7 @@ enum CatalogSort {
 class CatalogState {
   const CatalogState({
     this.books = const [],
+    this.knownCategories = const [],
     this.query = '',
     this.category,
     this.sort = CatalogSort.apiOrder,
@@ -31,6 +32,7 @@ class CatalogState {
   });
 
   final List<Book> books;
+  final List<String> knownCategories;
   final String query;
   final String? category;
   final CatalogSort sort;
@@ -44,6 +46,7 @@ class CatalogState {
 
   CatalogState copyWith({
     List<Book>? books,
+    List<String>? knownCategories,
     String? query,
     Object? category = _unchanged,
     CatalogSort? sort,
@@ -56,6 +59,7 @@ class CatalogState {
     Object? loadMoreError = _unchanged,
   }) => CatalogState(
     books: books ?? this.books,
+    knownCategories: knownCategories ?? this.knownCategories,
     query: query ?? this.query,
     category: identical(category, _unchanged)
         ? this.category
@@ -75,6 +79,7 @@ class CatalogState {
   );
 
   Iterable<String> get normalizedCategories {
+    if (knownCategories.isNotEmpty) return knownCategories;
     final values = <String, String>{};
     for (final book in books) {
       final value = book.categoryName?.trim();

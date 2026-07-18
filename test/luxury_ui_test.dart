@@ -390,7 +390,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final shelfCard = find.byKey(const ValueKey('shelf-card-2-0'));
+    final shelfCard = find.byKey(
+      const ValueKey('shelf-card-curated-for-you-2-0'),
+    );
     await tester.ensureVisible(shelfCard);
     await tester.pumpAndSettle();
     await tester.tap(shelfCard);

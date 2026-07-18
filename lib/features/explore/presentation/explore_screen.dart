@@ -120,25 +120,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
                         const SizedBox(height: AppSpacing.md),
                         _CategoryStrip(state: state),
                         const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                state.query.isEmpty
-                                    ? 'The collection'
-                                    : 'Search results',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall,
-                              ),
-                            ),
-                            if (!wide)
-                              OutlinedButton.icon(
-                                onPressed: () => _showFilters(context),
-                                icon: const Icon(Icons.tune_rounded, size: 18),
-                                label: const Text('Filter & sort'),
-                              ),
-                          ],
+                        _CatalogHeader(
+                          title: state.query.isEmpty
+                              ? 'The collection'
+                              : 'Search results',
+                          showFilters: !wide,
+                          onFilters: () => _showFilters(context),
                         ),
                       ],
                     ),
@@ -238,6 +225,50 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen>
       ),
     ),
   );
+}
+
+class _CatalogHeader extends StatelessWidget {
+  const _CatalogHeader({
+    required this.title,
+    required this.showFilters,
+    required this.onFilters,
+  });
+  final String title;
+  final bool showFilters;
+  final VoidCallback onFilters;
+
+  @override
+  Widget build(BuildContext context) {
+    final heading = Text(
+      title,
+      style: Theme.of(context).textTheme.headlineSmall,
+    );
+    if (!showFilters) return heading;
+    final button = OutlinedButton.icon(
+      onPressed: onFilters,
+      icon: const Icon(Icons.tune_rounded, size: 18),
+      label: const Text('Filter & sort'),
+    );
+    final stacked =
+        MediaQuery.sizeOf(context).width < 420 ||
+        MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          heading,
+          const SizedBox(height: AppSpacing.sm),
+          button,
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: heading),
+        button,
+      ],
+    );
+  }
 }
 
 class _SearchField extends StatelessWidget {
@@ -406,6 +437,7 @@ class _CatalogCard extends StatelessWidget {
       button: book.id != null,
       label: 'Open ${book.displayTitle} by ${book.displayAuthor}',
       child: InkWell(
+        key: ValueKey('catalog-card-${book.id ?? book.displayTitle}'),
         onTap: book.id == null
             ? null
             : () => context.push(

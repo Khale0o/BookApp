@@ -94,6 +94,18 @@ Carousel cover pose is derived continuously from `PageController.page`: the sele
 
 Details uses semantic 460 ms opening and 360 ms closing durations. The atmosphere fades behind the Hero, the destination cover receives a 0.985-to-1 settle, supporting content enters after the route is mostly settled, and the lower surface fades upward by 20 pixels. On pop, supporting content fades early, atmosphere reduces quietly, and the cover remains for the reverse Hero landing. Shelf cards reveal once with a short stagger and 10-pixel rise; press feedback uses a 100 ms scale/opacity response, followed by a restrained 1.2% opening lift before navigation. Reduced motion removes the shelf stagger/travel and opening lift while retaining immediate press feedback and navigation.
 
+## Product completion continuation
+
+After Phase 1 approval, the product was extended through the master implementation plan. The completed continuation adds the state-preserving Home/Explore/Cart/Profile shell, expanded Home, catalog search/filter/sort/pagination, reviews and related books, secure authentication/session restoration, Profile and address flows, profile image upload, cart operations, strict checkout handoff, defensive orders, attributed real-title cover fallbacks, responsive/accessibility hardening, deployment metadata, and complete portfolio documentation.
+
+Detailed reports:
+
+- `docs/phase_a_c_report.md`
+- `docs/phase_d_i_report.md`
+- `docs/phase_j_r_report.md`
+
+Backend gaps—especially seed mismatches, Azure Blob availability, authenticated response schemas, cart quantity semantics, and payment verification—remain documented rather than guessed.
+
 ## Manual runtime commands
 
 From the project root, choose one target after starting the appropriate device yourself:

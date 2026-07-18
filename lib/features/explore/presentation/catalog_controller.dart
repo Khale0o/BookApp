@@ -78,8 +78,20 @@ class CatalogController extends Notifier<CatalogState> {
           withoutId.add(book);
         }
       }
+      final categories = <String, String>{
+        for (final value in state.knownCategories) value.toLowerCase(): value,
+      };
+      for (final book in result) {
+        final value = book.categoryName?.trim();
+        if (value != null && value.isNotEmpty) {
+          categories.putIfAbsent(value.toLowerCase(), () => value);
+        }
+      }
+      final knownCategories = categories.values.toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       state = state.copyWith(
         books: [...byId.values, ...withoutId],
+        knownCategories: knownCategories,
         page: page,
         isInitialLoading: false,
         isLoadingMore: false,

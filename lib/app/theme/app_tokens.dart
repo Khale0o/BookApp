@@ -32,11 +32,6 @@ abstract final class AppTypography {
 }
 
 abstract final class AppSystemOverlay {
-  static const lightHeader = SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark,
-    statusBarBrightness: Brightness.light,
-  );
   static const immersiveDark = SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,

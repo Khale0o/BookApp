@@ -765,6 +765,10 @@ class _CuratedShelfState extends State<_CuratedShelf>
                       child: _ShelfBookCard(
                         book: widget.books[index],
                         index: index,
+                        heroContext: widget.title.toLowerCase().replaceAll(
+                          ' ',
+                          '-',
+                        ),
                       ),
                     ),
                   ),
@@ -872,9 +876,14 @@ class _ShelfReveal extends StatelessWidget {
 }
 
 class _ShelfBookCard extends StatefulWidget {
-  const _ShelfBookCard({required this.book, required this.index});
+  const _ShelfBookCard({
+    required this.book,
+    required this.index,
+    required this.heroContext,
+  });
   final Book book;
   final int index;
+  final String heroContext;
   @override
   State<_ShelfBookCard> createState() => _ShelfBookCardState();
 }
@@ -903,13 +912,19 @@ class _ShelfBookCardState extends State<_ShelfBookCard> {
   @override
   Widget build(BuildContext context) {
     final book = widget.book;
-    final tag = shelfBookHeroTag(book, widget.index);
+    final tag = shelfBookHeroTag(
+      book,
+      widget.index,
+      context: widget.heroContext,
+    );
     final reduced = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       button: book.id != null,
       label: 'Open ${book.displayTitle} by ${book.displayAuthor}',
       child: GestureDetector(
-        key: ValueKey('shelf-card-${book.id ?? 'unknown'}-${widget.index}'),
+        key: ValueKey(
+          'shelf-card-${widget.heroContext}-${book.id ?? 'unknown'}-${widget.index}',
+        ),
         onTapDown: book.id == null
             ? null
             : (details) => setState(() => _pressed = true),
