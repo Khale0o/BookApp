@@ -36,7 +36,7 @@ Tests cover complete and missing model data; int, double, numeric-string, and nu
 
 - `dart format .` — passed
 - `flutter analyze` — passed with no issues
-- `flutter test` — passed, 21 tests
+- `flutter test` — passed, 29 tests
 
 No emulator, browser, desktop runtime, `flutter run`, or integration test was launched.
 
@@ -77,6 +77,22 @@ Each book maps deterministically from its ID, or a manual title hash when the ID
 ### Motion and reduced motion
 
 Normal motion uses transform and opacity only: swipe-linked cover pose, short atmosphere transitions, selected-copy crossfade/up movement, press response, the existing cover Hero, and Details copy reveal. With `MediaQuery.disableAnimations`, rotation, perspective, decorative translation, entrance stagger, and atmosphere duration are removed. Carousel swiping, selection, immediate press feedback, Hero-safe routing, and navigation remain available.
+
+## Phase 1.4 runtime polish
+
+In-app navigation now passes a typed `BookDetailsRouteExtra` containing the already-loaded Book and its Hero tag. The router accepts it only when its Book ID exactly matches `/books/:bookId`; Details independently repeats that validation. A matching initial Book renders the cinematic Details scene immediately while `bookDetailsProvider` refreshes in the background. Direct links without initial data preserve the existing loading, error, retry, and not-found flow.
+
+The route itself no longer cross-fades the complete Details page. Cover Hero motion remains the shared transition, while Details labels, background title, and lower information sheet use the route animation to enter late and disappear before reverse completion. This prevents Home and Details text/content ghosting. Home, Details atmosphere/loading, and Splash now request light icons over their dark-first surfaces. Secondary text roles use readable pearl/cool-grey values, with focused emphasis for hero description, author, stock, top-right editorial text, and shelf metadata.
+
+## Phase 1.5 dark theme and motion polish
+
+The active product theme is now fixed to `ThemeMode.dark`. Home uses one continuous midnight surface across its integrated header, cinematic feature, curated shelf, and page bottom; section separation comes from spacing, atmosphere, and low-contrast detail rather than light bands. The Details lower information sheet uses the elevated blue-black semantic surface, and every route involved in the walking skeleton has an explicit dark background to prevent light flashes. Existing light-theme definitions remain available architecturally but are not selected during normal runtime.
+
+The yellow lines under generated-cover text were caused by the Hero overlay temporarily rendering the shuttle outside the source Material and inherited text context. `BookCover` now keeps a transparent Material and explicit undecorated `DefaultTextStyle` around the normal child and supplies a controlled `flightShuttleBuilder` that restores the captured Theme, MediaQuery, transparent Material, clipping, and text-decoration state for both push and pop flights.
+
+Carousel cover pose is derived continuously from `PageController.page`: the selected cover reaches a 1.035 scale, full opacity, centered vertical position, and strongest perceived depth; adjacent covers interpolate toward 0.92 scale, 0.72 opacity, and a 14-pixel lower position with restrained perspective. There is no page-settle jump. In reduced motion every cover uses scale 1, full opacity, no vertical offset, and no perspective while swiping and selection remain functional.
+
+Details uses semantic 460 ms opening and 360 ms closing durations. The atmosphere fades behind the Hero, the destination cover receives a 0.985-to-1 settle, supporting content enters after the route is mostly settled, and the lower surface fades upward by 20 pixels. On pop, supporting content fades early, atmosphere reduces quietly, and the cover remains for the reverse Hero landing. Shelf cards reveal once with a short stagger and 10-pixel rise; press feedback uses a 100 ms scale/opacity response, followed by a restrained 1.2% opening lift before navigation. Reduced motion removes the shelf stagger/travel and opening lift while retaining immediate press feedback and navigation.
 
 ## Manual runtime commands
 

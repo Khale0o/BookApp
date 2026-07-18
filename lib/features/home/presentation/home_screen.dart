@@ -43,8 +43,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final books = ref.watch(homeBooksProvider);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: AppSystemOverlay.lightHeader,
+      value: AppSystemOverlay.immersiveDark,
       child: Scaffold(
+        backgroundColor: AppColors.midnight,
         body: SafeArea(
           bottom: false,
           child: RefreshIndicator(
@@ -149,33 +150,37 @@ class _MinimalHeader extends StatelessWidget {
   const _MinimalHeader();
 
   @override
-  Widget build(BuildContext context) => ContentShell(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 1,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              AppConfig.appName,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(letterSpacing: .25),
+  Widget build(BuildContext context) => ColoredBox(
+    key: const ValueKey('home-header-surface'),
+    color: Theme.of(context).colorScheme.surface,
+    child: ContentShell(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 1,
+              color: Theme.of(context).colorScheme.primary,
             ),
-          ),
-          Text(
-            'EDITORIAL BOOKS',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 1.5,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                AppConfig.appName,
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall?.copyWith(letterSpacing: .25),
+              ),
             ),
-          ),
-        ],
+            Text(
+              'EDITORIAL BOOKS',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -187,21 +192,33 @@ class CarouselPose {
     required this.scale,
     required this.rotationY,
     required this.translationX,
+    required this.translationY,
+    required this.opacity,
   });
   final double scale;
   final double rotationY;
   final double translationX;
+  final double translationY;
+  final double opacity;
 }
 
 CarouselPose carouselPoseFor(double pageOffset, {required bool reducedMotion}) {
   final distance = pageOffset.abs().clamp(0.0, 1.0);
   if (reducedMotion) {
-    return const CarouselPose(scale: 1, rotationY: 0, translationX: 0);
+    return const CarouselPose(
+      scale: 1,
+      rotationY: 0,
+      translationX: 0,
+      translationY: 0,
+      opacity: 1,
+    );
   }
   return CarouselPose(
-    scale: 1 - distance * .08,
-    rotationY: pageOffset.clamp(-1.0, 1.0) * -.035,
+    scale: 1.035 - distance * .115,
+    rotationY: pageOffset.clamp(-1.0, 1.0) * -.026,
     translationX: pageOffset * -8,
+    translationY: distance * 14,
+    opacity: 1 - distance * .28,
   );
 }
 
@@ -360,10 +377,8 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: index == selectedIndex ? .44 : .22,
-                          ),
-                          blurRadius: index == selectedIndex ? 28 : 16,
+                          color: Colors.black.withValues(alpha: .38),
+                          blurRadius: 24,
                           offset: const Offset(0, 18),
                         ),
                       ],
@@ -395,10 +410,16 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                     ..translateByDouble(pose.translationX, 0, 0, 1)
                     ..rotateY(pose.rotationY)
                     ..scaleByDouble(pose.scale, pose.scale, 1, 1);
-                  return Transform(
-                    alignment: Alignment.center,
-                    transform: transform,
-                    child: child,
+                  return Opacity(
+                    opacity: pose.opacity,
+                    child: Transform.translate(
+                      offset: Offset(0, pose.translationY),
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: transform,
+                        child: child,
+                      ),
+                    ),
                   );
                 },
               );
@@ -452,7 +473,7 @@ class _SelectedBookInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final reduced = MediaQuery.disableAnimationsOf(context);
     return AnimatedSwitcher(
-      duration: reduced ? Duration.zero : AppMotion.standard,
+      duration: reduced ? Duration.zero : AppMotion.selectedCopy,
       switchInCurve: AppMotion.curve,
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
@@ -595,66 +616,140 @@ class _StockLabel extends StatelessWidget {
   }
 }
 
-class _CuratedShelf extends StatelessWidget {
+class _CuratedShelf extends StatefulWidget {
   const _CuratedShelf({required this.books});
   final List<Book> books;
 
   @override
+  State<_CuratedShelf> createState() => _CuratedShelfState();
+}
+
+class _CuratedShelfState extends State<_CuratedShelf>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _revealController;
+
+  @override
+  void initState() {
+    super.initState();
+    _revealController = AnimationController(
+      vsync: this,
+      duration: AppMotion.shelfReveal,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _revealController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (books.isEmpty) return const SizedBox.shrink();
-    return ContentShell(
-      child: Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.xxl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'The curated shelf',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'A measured selection from the current collection.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+    if (widget.books.isEmpty) return const SizedBox.shrink();
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    return ColoredBox(
+      key: const ValueKey('shelf-surface'),
+      color: Theme.of(context).colorScheme.surface,
+      child: ContentShell(
+        child: Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xxl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'The curated shelf',
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'A measured selection from the current collection.',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'SWIPE TO BROWSE',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                key: const ValueKey('curated-shelf'),
+                height: 390,
+                child: ListView.separated(
+                  clipBehavior: Clip.hardEdge,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 1),
+                  itemCount: widget.books.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: AppSpacing.lg),
+                  itemBuilder: (context, index) => _ShelfReveal(
+                    animation: _revealController,
+                    index: index,
+                    reducedMotion: reduced,
+                    child: SizedBox(
+                      width: 176,
+                      child: _ShelfBookCard(
+                        book: widget.books[index],
+                        index: index,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                Text(
-                  'SWIPE TO BROWSE',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SizedBox(
-              key: const ValueKey('curated-shelf'),
-              height: 390,
-              child: ListView.separated(
-                clipBehavior: Clip.hardEdge,
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                itemCount: books.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: AppSpacing.lg),
-                itemBuilder: (context, index) => SizedBox(
-                  width: 176,
-                  child: _ShelfBookCard(book: books[index], index: index),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShelfReveal extends StatelessWidget {
+  const _ShelfReveal({
+    required this.animation,
+    required this.index,
+    required this.reducedMotion,
+    required this.child,
+  });
+  final Animation<double> animation;
+  final int index;
+  final bool reducedMotion;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (reducedMotion) return child;
+    final start = (index * .07).clamp(0.0, .42).toDouble();
+    final end = (start + .58).clamp(0.0, 1.0).toDouble();
+    final reveal = CurvedAnimation(
+      parent: animation,
+      curve: Interval(start, end, curve: AppMotion.curve),
+    );
+    return AnimatedBuilder(
+      animation: reveal,
+      child: child,
+      builder: (context, child) => Opacity(
+        opacity: reveal.value,
+        child: Transform.translate(
+          offset: Offset(0, 10 * (1 - reveal.value)),
+          child: child,
         ),
       ),
     );
@@ -671,6 +766,25 @@ class _ShelfBookCard extends StatefulWidget {
 
 class _ShelfBookCardState extends State<_ShelfBookCard> {
   bool _pressed = false;
+  bool _opening = false;
+
+  Future<void> _openBook(Book book, Object tag, bool reduced) async {
+    if (_opening || book.id == null) return;
+    setState(() {
+      _pressed = false;
+      _opening = true;
+    });
+    if (!reduced) {
+      await Future<void>.delayed(AppMotion.press);
+    }
+    if (!mounted) return;
+    await context.push(
+      AppRoutes.book(book.id!),
+      extra: BookDetailsRouteExtra(book: book, heroTag: tag),
+    );
+    if (mounted) setState(() => _opening = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final book = widget.book;
@@ -680,6 +794,7 @@ class _ShelfBookCardState extends State<_ShelfBookCard> {
       button: book.id != null,
       label: 'Open ${book.displayTitle} by ${book.displayAuthor}',
       child: GestureDetector(
+        key: ValueKey('shelf-card-${book.id ?? 'unknown'}-${widget.index}'),
         onTapDown: book.id == null
             ? null
             : (details) => setState(() => _pressed = true),
@@ -688,18 +803,13 @@ class _ShelfBookCardState extends State<_ShelfBookCard> {
             : () => setState(() => _pressed = false),
         onTapUp: book.id == null
             ? null
-            : (details) {
-                setState(() => _pressed = false);
-                context.push(
-                  AppRoutes.book(book.id!),
-                  extra: BookDetailsRouteExtra(book: book, heroTag: tag),
-                );
-              },
+            : (details) => _openBook(book, tag, reduced),
         child: AnimatedScale(
-          duration: reduced ? Duration.zero : AppMotion.quick,
-          scale: _pressed && !reduced ? .985 : 1,
+          duration: AppMotion.press,
+          curve: AppMotion.curve,
+          scale: _opening && !reduced ? 1.012 : (_pressed ? .985 : 1),
           child: AnimatedOpacity(
-            duration: AppMotion.quick,
+            duration: AppMotion.press,
             opacity: _pressed ? .82 : 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

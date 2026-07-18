@@ -88,4 +88,55 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.textContaining('An Exceptionally Long Title'), findsOneWidget);
   });
+
+  testWidgets('generated-cover Hero shuttle preserves undecorated text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 160,
+            child: BookCover(
+              image: null,
+              semanticLabel: 'Cover of Hero Book',
+              bookId: 41,
+              title: 'Hero Book',
+              author: 'Hero Author',
+              heroTag: 'hero-cover-test',
+            ),
+          ),
+        ),
+      ),
+    );
+    final heroFinder = find.byType(Hero);
+    final hero = tester.widget<Hero>(heroFinder);
+    final context = tester.element(heroFinder);
+    final shuttle = hero.flightShuttleBuilder!(
+      context,
+      const AlwaysStoppedAnimation<double>(.5),
+      HeroFlightDirection.push,
+      context,
+      context,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: SizedBox(width: 160, child: shuttle)),
+    );
+
+    expect(find.text('Hero Book'), findsOneWidget);
+    expect(
+      tester
+          .widgetList<DefaultTextStyle>(find.byType(DefaultTextStyle))
+          .any((style) => style.style.decoration == TextDecoration.none),
+      isTrue,
+    );
+    expect(
+      tester
+          .widgetList<Material>(find.byType(Material))
+          .any((material) => material.type == MaterialType.transparency),
+      isTrue,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

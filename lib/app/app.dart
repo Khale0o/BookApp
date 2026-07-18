@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 class BookstoreApp extends StatelessWidget {
   const BookstoreApp({super.key});
 
+  static const activeThemeMode = ThemeMode.dark;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
@@ -13,7 +15,7 @@ class BookstoreApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: activeThemeMode,
       routerConfig: appRouter,
     );
   }

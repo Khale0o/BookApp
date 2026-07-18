@@ -28,25 +28,66 @@ class BookCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cover = Semantics(
-      image: true,
-      label: semanticLabel,
-      child: AspectRatio(
-        aspectRatio: 2 / 3,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: _CoverImage(
-            url: resolveBookImageUrl(image),
-            bookId: bookId,
-            title: title,
-            author: author,
-            category: category,
+    final theme = Theme.of(context);
+    final mediaQuery = MediaQuery.maybeOf(context);
+    final cover = Material(
+      type: MaterialType.transparency,
+      child: DefaultTextStyle.merge(
+        style: const TextStyle(
+          decoration: TextDecoration.none,
+          decorationColor: Colors.transparent,
+        ),
+        child: Semantics(
+          image: true,
+          label: semanticLabel,
+          child: AspectRatio(
+            aspectRatio: 2 / 3,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: _CoverImage(
+                url: resolveBookImageUrl(image),
+                bookId: bookId,
+                title: title,
+                author: author,
+                category: category,
+              ),
+            ),
           ),
         ),
       ),
     );
     if (heroTag == null) return cover;
-    return Hero(tag: heroTag!, transitionOnUserGestures: true, child: cover);
+    return Hero(
+      tag: heroTag!,
+      transitionOnUserGestures: true,
+      flightShuttleBuilder:
+          (flightContext, animation, direction, fromContext, toContext) {
+            final hero =
+                (direction == HeroFlightDirection.push
+                        ? fromContext.widget
+                        : toContext.widget)
+                    as Hero;
+            Widget shuttle = Theme(
+              data: theme,
+              child: Material(
+                type: MaterialType.transparency,
+                child: DefaultTextStyle(
+                  style: (theme.textTheme.bodyMedium ?? const TextStyle())
+                      .copyWith(
+                        decoration: TextDecoration.none,
+                        decorationColor: Colors.transparent,
+                      ),
+                  child: hero.child,
+                ),
+              ),
+            );
+            if (mediaQuery != null) {
+              shuttle = MediaQuery(data: mediaQuery, child: shuttle);
+            }
+            return shuttle;
+          },
+      child: cover,
+    );
   }
 }
 

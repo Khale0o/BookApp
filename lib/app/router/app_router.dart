@@ -1,4 +1,5 @@
 import 'package:bookapp/features/books/presentation/book_details_screen.dart';
+import 'package:bookapp/app/theme/app_tokens.dart';
 import 'package:bookapp/features/books/domain/book.dart';
 import 'package:bookapp/features/home/presentation/home_screen.dart';
 import 'package:bookapp/features/splash/presentation/splash_screen.dart';
@@ -49,7 +50,10 @@ final appRouter = GoRouter(
           key: state.pageKey,
           transitionDuration: reduceMotion
               ? Duration.zero
-              : const Duration(milliseconds: 280),
+              : AppMotion.detailsOpen,
+          reverseTransitionDuration: reduceMotion
+              ? Duration.zero
+              : AppMotion.detailsClose,
           child: BookDetailsScreen(
             bookId: id,
             heroTag: initialBook == null ? null : extra!.heroTag,

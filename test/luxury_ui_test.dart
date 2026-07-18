@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bookapp/app/router/app_router.dart';
+import 'package:bookapp/app/app.dart';
 import 'package:bookapp/app/theme/app_theme.dart';
 import 'package:bookapp/app/theme/app_tokens.dart';
 import 'package:bookapp/core/utils/book_hero_tags.dart';
@@ -15,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 const _books = [
   Book(
@@ -72,7 +74,7 @@ class _PendingDetailsRepository implements BooksRepository {
 }
 
 Widget _testApp(Widget child, {bool reducedMotion = false}) => MaterialApp(
-  theme: AppTheme.light,
+  theme: AppTheme.dark,
   home: MediaQuery(
     data: const MediaQueryData(
       size: Size(390, 844),
@@ -95,6 +97,10 @@ void main() {
       shelfBookHeroTag(_books.first, 0),
       isNot(shelfBookHeroTag(_books.first, 1)),
     );
+  });
+
+  test('application product mode is dark-first', () {
+    expect(BookstoreApp.activeThemeMode, ThemeMode.dark);
   });
 
   testWidgets('carousel swipe changes the selected book', (tester) async {
@@ -125,6 +131,7 @@ void main() {
     final pose = carouselPoseFor(.75, reducedMotion: true);
     expect(pose.rotationY, 0);
     expect(pose.translationX, 0);
+    expect(pose.translationY, 0);
     expect(pose.scale, 1);
 
     await tester.pumpWidget(
@@ -141,6 +148,14 @@ void main() {
       tester.widget<Text>(find.byKey(const ValueKey('selected-title'))).data,
       'Second Edition',
     );
+  });
+
+  test('selected carousel pose is deeper than an adjacent pose', () {
+    final selected = carouselPoseFor(0, reducedMotion: false);
+    final adjacent = carouselPoseFor(1, reducedMotion: false);
+    expect(selected.scale, greaterThan(adjacent.scale));
+    expect(selected.opacity, greaterThan(adjacent.opacity));
+    expect(selected.translationY, lessThan(adjacent.translationY));
   });
 
   testWidgets('narrow carousel contains a long selected title', (tester) async {
@@ -187,6 +202,14 @@ void main() {
     );
     expect(shelfRect.left, greaterThanOrEqualTo(0));
     expect(shelfRect.right, lessThanOrEqualTo(390));
+    final header = tester.widget<ColoredBox>(
+      find.byKey(const ValueKey('home-header-surface')),
+    );
+    final shelf = tester.widget<ColoredBox>(
+      find.byKey(const ValueKey('shelf-surface')),
+    );
+    expect(header.color, AppColors.midnight);
+    expect(shelf.color, AppColors.midnight);
     expect(tester.takeException(), isNull);
   });
 
@@ -208,6 +231,13 @@ void main() {
     expect(find.byKey(const ValueKey('details-atmosphere')), findsOneWidget);
     expect(find.text('Second Edition'), findsWidgets);
     expect(find.byType(Hero), findsNothing);
+    final infoSurface = tester.widget<Container>(
+      find.byKey(const ValueKey('details-info-surface')),
+    );
+    expect(
+      (infoSurface.decoration as BoxDecoration).color,
+      AppColors.midnightElevated,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -262,7 +292,7 @@ void main() {
     );
   });
 
-  testWidgets('Home and Details apply route-appropriate status-bar styles', (
+  testWidgets('Home and Details use light icons over dark-first surfaces', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -278,7 +308,7 @@ void main() {
       find.byWidgetPredicate(
         (widget) =>
             widget is AnnotatedRegion<SystemUiOverlayStyle> &&
-            widget.value.statusBarIconBrightness == Brightness.dark,
+            widget.value.statusBarIconBrightness == Brightness.light,
       ),
       findsWidgets,
     );
@@ -300,6 +330,48 @@ void main() {
       ),
       findsWidgets,
     );
+  });
+
+  testWidgets('shelf press motion still completes navigation', (tester) async {
+    final router = GoRouter(
+      initialLocation: AppRoutes.home,
+      routes: [
+        GoRoute(
+          path: AppRoutes.home,
+          builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/books/:bookId',
+          builder: (context, state) =>
+              const Scaffold(body: Center(child: Text('Details destination'))),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          booksRepositoryProvider.overrideWithValue(_LuxuryFakeRepository()),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.dark,
+          themeMode: ThemeMode.dark,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final shelfCard = find.byKey(const ValueKey('shelf-card-2-0'));
+    await tester.ensureVisible(shelfCard);
+    await tester.pumpAndSettle();
+    await tester.tap(shelfCard);
+    await tester.pump(AppMotion.press + const Duration(milliseconds: 20));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Details destination'), findsOneWidget);
   });
 
   test('theme assigns editorial and functional font families', () {

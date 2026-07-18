@@ -72,8 +72,14 @@ abstract final class AppLayout {
 
 abstract final class AppMotion {
   static const splash = Duration(milliseconds: 1100);
-  static const quick = Duration(milliseconds: 140);
+  static const press = Duration(milliseconds: 100);
+  static const quick = Duration(milliseconds: 120);
+  static const selectedCopy = Duration(milliseconds: 220);
+  static const shelfReveal = Duration(milliseconds: 320);
+  static const detailsOpen = Duration(milliseconds: 460);
+  static const detailsClose = Duration(milliseconds: 360);
   static const standard = Duration(milliseconds: 320);
   static const slow = Duration(milliseconds: 520);
   static const curve = Curves.easeOutCubic;
+  static const smoothCurve = Curves.easeInOutCubic;
 }

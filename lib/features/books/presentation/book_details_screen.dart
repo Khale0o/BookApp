@@ -130,8 +130,10 @@ class _DetailsSceneState extends State<_DetailsScene>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: AppMotion.slow)
-      ..forward();
+    _controller = AnimationController(
+      vsync: this,
+      duration: AppMotion.detailsOpen,
+    )..forward();
   }
 
   @override
@@ -155,9 +157,23 @@ class _DetailsSceneState extends State<_DetailsScene>
             parent: routeAnimation,
             curve: const Interval(.55, 1, curve: Curves.easeOut),
           );
+    final Animation<double> atmosphereRouteAnimation =
+        reduced || routeAnimation is! Animation<double>
+        ? const AlwaysStoppedAnimation<double>(1)
+        : CurvedAnimation(
+            parent: routeAnimation,
+            curve: const Interval(0, .7, curve: Curves.easeOut),
+            reverseCurve: const Interval(0, .9, curve: Curves.easeInOut),
+          );
+    final coverSettle = reduced
+        ? const AlwaysStoppedAnimation<double>(1)
+        : Tween<double>(begin: .985, end: 1).animate(
+            CurvedAnimation(parent: _controller, curve: AppMotion.curve),
+          );
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: AppSystemOverlay.immersiveDark,
       child: Scaffold(
+        backgroundColor: AppColors.midnight,
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -167,7 +183,10 @@ class _DetailsSceneState extends State<_DetailsScene>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    BookAtmosphere(palette: palette),
+                    FadeTransition(
+                      opacity: atmosphereRouteAnimation,
+                      child: BookAtmosphere(palette: palette),
+                    ),
                     Positioned(
                       top: MediaQuery.paddingOf(context).top + AppSpacing.sm,
                       left: AppSpacing.md,
@@ -206,25 +225,31 @@ class _DetailsSceneState extends State<_DetailsScene>
                             constraints: BoxConstraints(
                               maxWidth: wide ? 300 : 235,
                             ),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: .48),
-                                    blurRadius: 32,
-                                    offset: const Offset(0, 20),
-                                  ),
-                                ],
-                              ),
-                              child: BookCover(
-                                image: book.bookImage,
-                                semanticLabel: 'Cover of ${book.displayTitle}',
-                                bookId: book.id,
-                                title: book.bookTitle,
-                                author: book.authorName,
-                                category: book.categoryName,
-                                heroTag: widget.heroTag,
-                                borderRadius: AppRadii.sm,
+                            child: ScaleTransition(
+                              scale: coverSettle,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: .48,
+                                      ),
+                                      blurRadius: 32,
+                                      offset: const Offset(0, 20),
+                                    ),
+                                  ],
+                                ),
+                                child: BookCover(
+                                  image: book.bookImage,
+                                  semanticLabel:
+                                      'Cover of ${book.displayTitle}',
+                                  bookId: book.id,
+                                  title: book.bookTitle,
+                                  author: book.authorName,
+                                  category: book.categoryName,
+                                  heroTag: widget.heroTag,
+                                  borderRadius: AppRadii.sm,
+                                ),
                               ),
                             ),
                           ),
@@ -264,6 +289,7 @@ class _DetailsSceneState extends State<_DetailsScene>
                 child: Transform.translate(
                   offset: const Offset(0, -34),
                   child: Container(
+                    key: const ValueKey('details-info-surface'),
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.surfaceContainer,
@@ -297,7 +323,7 @@ class _DetailsSceneState extends State<_DetailsScene>
                             builder: (context, child) => Transform.translate(
                               offset: reduced
                                   ? Offset.zero
-                                  : Offset(0, 14 * (1 - curve.value)),
+                                  : Offset(0, 20 * (1 - curve.value)),
                               child: child,
                             ),
                           ),
@@ -487,50 +513,54 @@ class _DetailsLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final block = Theme.of(context).colorScheme.surfaceContainerHighest;
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                const Positioned.fill(
-                  child: ColoredBox(color: AppColors.midnightElevated),
-                ),
-                const Positioned(
-                  top: AppSpacing.xl,
-                  left: AppSpacing.md,
-                  child: SafeArea(child: _FloatingBackButton()),
-                ),
-                Center(
-                  child: Container(
-                    width: 220,
-                    height: 330,
-                    decoration: BoxDecoration(
-                      color: AppColors.slate,
-                      borderRadius: BorderRadius.circular(AppRadii.sm),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: AppSystemOverlay.immersiveDark,
+      child: Scaffold(
+        backgroundColor: AppColors.midnight,
+        body: Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  const Positioned.fill(
+                    child: ColoredBox(color: AppColors.midnightElevated),
+                  ),
+                  const Positioned(
+                    top: AppSpacing.xl,
+                    left: AppSpacing.md,
+                    child: SafeArea(child: _FloatingBackButton()),
+                  ),
+                  Center(
+                    child: Container(
+                      width: 220,
+                      height: 330,
+                      decoration: BoxDecoration(
+                        color: AppColors.slate,
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Container(
-            height: 260,
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            color: Theme.of(context).colorScheme.surfaceContainer,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(width: 110, height: 12, color: block),
-                const SizedBox(height: AppSpacing.md),
-                Container(width: double.infinity, height: 52, color: block),
-                const SizedBox(height: AppSpacing.md),
-                Container(width: 190, height: 18, color: block),
-              ],
+            Container(
+              height: 260,
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              color: Theme.of(context).colorScheme.surfaceContainer,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: 110, height: 12, color: block),
+                  const SizedBox(height: AppSpacing.md),
+                  Container(width: double.infinity, height: 52, color: block),
+                  const SizedBox(height: AppSpacing.md),
+                  Container(width: 190, height: 18, color: block),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
